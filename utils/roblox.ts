@@ -52,24 +52,44 @@ export async function getRobloxUser(id: number | bigint): Promise<{ name: string
   }
 }
 
+type ThumbnailResponse = {
+  data?: Array<{
+    targetId?: number;
+    state?: string;
+    imageUrl?: string;
+  }>;
+};
+
 export async function getRobloxThumbnail(id: number | bigint) {
   try {
     const result = await withTimeout(
-      fetchApi(getUsersAvatarHeadshot, { userIds: [Number(id)], size: "720x720", format: "Png" })
+      fetchApi(getUsersAvatarHeadshot, {
+        userIds: [Number(id)],
+        size: "720x720",
+        format: "Png",
+      })
     );
-    if (isAnyErrorResponse(result)) return "";
-    return result.data?.[0]?.imageUrl ?? "";
+    if (!result || isAnyErrorResponse(result)) return "";
+    const data = (result as ThumbnailResponse).data;
+    return data?.[0]?.imageUrl ?? "";
   } catch (error) {
     console.error(`Error getting thumbnail for user ${id}:`, error);
     return "";
   }
 }
 
-export async function getPlayerThumbnails(userIds: number[], size: "180x180" | "720x720" = "180x180") {
+export async function getPlayerThumbnails(
+  userIds: number[],
+  size: "180x180" | "720x720" = "180x180"
+) {
   try {
-    const result = await fetchApi(getUsersAvatarHeadshot, { userIds, size, format: "Png" });
-    if (isAnyErrorResponse(result)) return [];
-    return result.data ?? [];
+    const result = await fetchApi(getUsersAvatarHeadshot, {
+      userIds,
+      size,
+      format: "Png",
+    });
+    if (!result || isAnyErrorResponse(result)) return [];
+    return (result as ThumbnailResponse).data ?? [];
   } catch (error) {
     console.error("Error getting player thumbnails:", error);
     return [];
@@ -118,9 +138,14 @@ export async function getRobloxBlurb(userId: number): Promise<string | null> {
 
 export async function getGroupLogo(groupId: number): Promise<string> {
   try {
-    const result = await fetchApi(getGroupsIcons, { groupIds: [groupId], size: "150x150", format: "Png" });
-    if (isAnyErrorResponse(result)) return "";
-    return result.data?.[0]?.imageUrl ?? "";
+    const result = await fetchApi(getGroupsIcons, {
+      groupIds: [groupId],
+      size: "150x150",
+      format: "Png",
+    });
+    if (!result || isAnyErrorResponse(result)) return "";
+    const data = (result as ThumbnailResponse).data;
+    return data?.[0]?.imageUrl ?? "";
   } catch (error) {
     console.error(`Error getting logo for group ${groupId}:`, error);
     return "";
