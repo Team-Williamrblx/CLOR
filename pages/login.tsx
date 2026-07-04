@@ -486,7 +486,7 @@ const Login: NextPage = () => {
   );
 
   return (
-    <div className="relative min-h-screen overflow-hidden">
+    <div className="relative min-h-screen overflow-x-hidden">
       <canvas
         ref={canvasRef}
         className="absolute inset-0 w-full h-full"
@@ -500,21 +500,18 @@ const Login: NextPage = () => {
             className="h-12 w-auto drop-shadow-[0_8px_24px_rgba(15,23,42,0.18)]"
           />
         </div>
-        <div className="absolute right-4 top-4 sm:right-6 sm:top-6 lg:hidden">
-          <ThemeToggle />
-        </div>
-        <div className="mx-auto flex min-h-[calc(100vh-3rem)] max-w-lg items-center justify-center">
+        <div className="mx-auto flex w-full max-w-sm sm:max-w-md md:max-w-lg lg:max-w-xl items-center justify-center min-h-[calc(100vh-3rem)] py-4">
           <div className="flex w-full items-center justify-center">
-            <div className="relative w-full rounded-[2rem] bg-white/90 p-8 shadow-[0_30px_80px_rgba(15,23,42,0.22)] backdrop-blur-md dark:bg-zinc-800/80 sm:p-9 lg:px-10 lg:py-12">
-              <div className="absolute right-8 top-8 hidden lg:block">
+            <div className="relative w-full rounded-[2rem] bg-white/90 p-5 shadow-[0_30px_80px_rgba(15,23,42,0.22)] backdrop-blur-md dark:bg-zinc-800/80 sm:p-8 lg:px-10 lg:py-12">
+              <div className="absolute right-5 top-5 sm:right-8 sm:top-8">
                 <ThemeToggle />
               </div>
               <div className="w-full lg:my-auto">
-              <div className="-mt-6 mb-5 flex justify-center">
+              <div className="mb-3 sm:mb-4 flex justify-center">
                 <img
                   src="/logo.svg"
                   alt="Firefli logo"
-                  className="h-10 w-auto sm:h-12"
+                  className="h-7 w-auto sm:h-12"
                 />
               </div>
               {suspendedMessage && (
@@ -525,7 +522,7 @@ const Login: NextPage = () => {
                 </div>
               )}
 
-              <div className="mb-6 flex justify-center space-x-8">
+              <div className="mb-3 sm:mb-6 flex justify-center space-x-8">
                 {["login", ...(oauthOnly ? [] : ["signup"])].map((m) => {
                   const isActive = mode === m;
                   const activeClass =
@@ -550,10 +547,10 @@ const Login: NextPage = () => {
 
               {mode === "login" && (
                 <>
-                  <p className="mb-2 font-bold text-3xl text-zinc-700 dark:text-white">
+                  <p className="mb-1 sm:mb-2 font-bold text-xl sm:text-3xl text-zinc-700 dark:text-white">
                     👋 Welcome to Firefli
                   </p>
-                  <p className="mb-6 text-md text-zinc-600 dark:text-zinc-300">
+                  <p className="mb-3 sm:mb-6 text-md text-zinc-600 dark:text-zinc-300">
                     Login to your account to continue
                   </p>
 
@@ -561,7 +558,7 @@ const Login: NextPage = () => {
                     <FormProvider {...loginMethods}>
                       <form
                         onSubmit={submitLogin(onSubmitLogin)}
-                        className="mb-6 space-y-5"
+                        className="mb-4 sm:mb-6 space-y-3 sm:space-y-5"
                         noValidate
                       >
                         <Input
@@ -581,7 +578,7 @@ const Login: NextPage = () => {
                             required: "This field is required",
                           })}
                         />
-                        <div className="mb-2 flex items-center">
+                        <div className="mb-1 sm:mb-2 flex items-center">
                           <input
                             id="show-password"
                             type="checkbox"
@@ -679,7 +676,7 @@ const Login: NextPage = () => {
                 <>
                   {signupStep === 0 && (
                     <>
-                      <p className="mb-2 font-bold text-3xl text-zinc-700 dark:text-white">
+                      <p className="mb-2 font-bold text-xl sm:text-3xl text-zinc-700 dark:text-white">
                         🔨 Create an account
                       </p>
                       <p className="mb-6 text-md text-zinc-600 dark:text-zinc-300">
@@ -777,7 +774,7 @@ const Login: NextPage = () => {
 
                   {signupStep === 1 && (
                     <>
-                      <p className="mb-2 font-bold text-3xl text-zinc-700 dark:text-white">
+                      <p className="mb-2 font-bold text-xl sm:text-3xl text-zinc-700 dark:text-white">
                         🔒 Set a password
                       </p>
                       <p className="mb-6 text-md text-zinc-600 dark:text-zinc-300">
@@ -889,7 +886,7 @@ const Login: NextPage = () => {
 
                   {signupStep === 2 && (
                     <>
-                      <p className="mb-2 font-bold text-3xl dark:text-white">
+                      <p className="mb-2 font-bold text-xl sm:text-3xl dark:text-white">
                         Verify your account
                       </p>
                       <p className="mb-6 text-md text-zinc-600 dark:text-zinc-300">
