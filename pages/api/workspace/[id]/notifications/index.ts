@@ -19,6 +19,34 @@ async function handler(req: NextApiRequest, res: NextApiResponse<Data>) {
   const workspaceGroupId = BigInt(req.query.id as string);
   const userId = req.session.userid;
 
+  if (req.method === 'POST') {
+    const { type, title, body, href } = req.body as {
+      type?: string;
+      title?: string;
+      body?: string;
+      href?: string;
+    };
+
+    if (!title || !body) {
+      return res.status(400).json({ success: false, error: 'title and body are required' });
+    }
+
+    const notifType = type ?? 'changelog';
+
+    await prisma.notification.create({
+      data: {
+        userId,
+        workspaceGroupId,
+        type: notifType,
+        title,
+        body,
+        href: href ?? null,
+      },
+    });
+
+    return res.status(201).json({ success: true });
+  }
+
   if (req.method === 'GET') {
     const notifications = await prisma.notification.findMany({
       where: { userId, workspaceGroupId },

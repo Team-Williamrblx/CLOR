@@ -10,7 +10,9 @@ export type NotificationType =
   | 'userbook_termination'
   | 'userbook_resignation'
   | 'session_started'
-  | 'recommendation_created';
+  | 'recommendation_created'
+  | 'changelog'
+  | 'custom';
 
 export async function createNotification(
   userId: bigint | number,

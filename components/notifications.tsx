@@ -41,6 +41,8 @@ function icon(type: string) {
   if (type.startsWith('userbook_promotion')) return 'bg-green-500';
   if (type.startsWith('userbook_demotion')) return 'bg-orange-500';
   if (type.startsWith('session_')) return 'bg-purple-500';
+  if (type === 'changelog') return 'bg-primary';
+  if (type === 'custom') return 'bg-indigo-500';
   return 'bg-zinc-400';
 }
 
