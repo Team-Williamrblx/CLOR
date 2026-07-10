@@ -87,7 +87,7 @@ export default withSessionRoute(async function handler(
         },
         archived: true,
         archiveStartDate: { lte: historyEnd },
-        archiveEndDate: { gte: historyStart },
+        archiveEndDate: { gt: historyStart },
       };
     } else {
       sessionQuery = {
@@ -147,7 +147,7 @@ export default withSessionRoute(async function handler(
         },
         archived: true,
         archiveStartDate: { lte: historyEnd },
-        archiveEndDate: { gte: historyStart },
+        archiveEndDate: { gt: historyStart },
       };
     } else {
       participationQuery = {
