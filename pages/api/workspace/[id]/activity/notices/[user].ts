@@ -17,7 +17,7 @@ type Data = {
 	notices?: SerializedInactivityNotice[]
 };
 
-export default withPermissionCheck(handler, 'manage_notices');
+export default withPermissionCheck(handler, 'create_notices');
 
 export async function handler(
 	req: NextApiRequest,
