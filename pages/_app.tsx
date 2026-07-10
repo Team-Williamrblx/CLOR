@@ -9,7 +9,7 @@ import "react-grid-layout/css/styles.css";
 import "react-resizable/css/styles.css";
 import type { AppProps } from "next/app";
 import { workspacestate } from "@/state";
-import { RecoilRoot, useRecoilState, useRecoilValue } from "recoil";
+import { RecoilRoot, useRecoilState } from "recoil";
 import type { pageWithLayout } from "@/layoutTypes";
 import { useEffect, useState, useRef } from "react";
 import Head from "next/head";
@@ -55,13 +55,22 @@ ChartJS.register(
 );
 
 function ThemeHandler() {
-  const theme = useRecoilValue(themeState);
+  const [theme, setTheme] = useRecoilState(themeState);
 
   useEffect(() => {
     if (!theme) return;
     document.documentElement.classList.remove("light", "dark");
     document.documentElement.classList.add(theme as string);
   }, [theme]);
+
+  useEffect(() => {
+    const stored = localStorage.getItem("theme");
+    if (stored) return; // user has an explicit preference, don't override
+    const mq = window.matchMedia("(prefers-color-scheme: dark)");
+    const handler = (e: MediaQueryListEvent) => setTheme(e.matches ? "dark" : "light");
+    mq.addEventListener("change", handler);
+    return () => mq.removeEventListener("change", handler);
+  }, [setTheme]);
 
   return null;
 }
