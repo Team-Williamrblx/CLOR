@@ -50,13 +50,6 @@ export default withSessionRoute(
       const isAdmin = membership?.isAdmin || false;
       const userRole = user?.roles?.[0];
 
-      if (!isAdmin && userRole) {
-        const hasPermission = userRole.permissions.includes(`sessions_${sessionType}_assign`);
-        if (!hasPermission) {
-          return res.status(403).json({ error: "You don't have permission to unassign users from this session type" });
-        }
-      }
-
       const sessionDate = new Date(parseInt(date));
       sessionDate.setMinutes(sessionDate.getMinutes() - timezoneOffset);
       sessionDate.setUTCHours(schedule.Hour);
@@ -73,6 +66,28 @@ export default withSessionRoute(
 
       if (!session) {
         return res.status(404).json({ error: "Session not found" });
+      }
+
+      const existingAssignment = await prisma.sessionUser.findFirst({
+        where: {
+          sessionid: session.id,
+          roleID: slotId,
+          slot: slotIndex,
+        },
+      });
+
+      if (!isAdmin && userRole) {
+        const hasAssignPermission = userRole.permissions.includes(`sessions_${sessionType}_assign`);
+        const hasClaimPermission = userRole.permissions.includes(`sessions_${sessionType}_claim`);
+        const isRemovingSelf = !!(existingAssignment && existingAssignment.userid.toString() === userId.toString());
+
+        const canRemove = isRemovingSelf
+          ? hasClaimPermission || hasAssignPermission
+          : hasAssignPermission;
+
+        if (!canRemove) {
+          return res.status(403).json({ error: "You don't have permission to unassign users from this session type" });
+        }
       }
 
       await prisma.sessionUser.deleteMany({
