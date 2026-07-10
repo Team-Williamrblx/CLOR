@@ -52,12 +52,32 @@ export async function getRobloxUser(id: number | bigint): Promise<{ name: string
   }
 }
 
-export async function getRobloxThumbnail(id: number | bigint) {
+type RobloxThumbnail = {
+  targetId?: number;
+  state?: string;
+  imageUrl?: string;
+  version?: string;
+};
+
+type RobloxThumbnailResponse = {
+  data?: Array<{
+    targetId?: number;
+    state?: string;
+    imageUrl?: string;
+    version?: string;
+  }>;
+};
+
+export async function getRobloxThumbnail( id: number | bigint ): Promise<string> {
   try {
-    const result = await withTimeout(
-      fetchApi(getUsersAvatarHeadshot, { userIds: [Number(id)], size: "720x720", format: "Png" })
-    );
-    if (isAnyErrorResponse(result)) return "";
+    const request = fetchApi(getUsersAvatarHeadshot, {
+      userIds: [Number(id)],
+      size: "720x720",
+      format: "Png",
+    }) as unknown as Promise<RobloxThumbnailResponse>;
+
+    const result = await withTimeout(request);
+
     return result.data?.[0]?.imageUrl ?? "";
   } catch (error) {
     console.error(`Error getting thumbnail for user ${id}:`, error);
@@ -65,10 +85,17 @@ export async function getRobloxThumbnail(id: number | bigint) {
   }
 }
 
-export async function getPlayerThumbnails(userIds: number[], size: "180x180" | "720x720" = "180x180") {
+export async function getPlayerThumbnails(
+  userIds: number[],
+  size: "180x180" | "720x720" = "180x180"
+): Promise<RobloxThumbnail[]> {
   try {
-    const result = await fetchApi(getUsersAvatarHeadshot, { userIds, size, format: "Png" });
-    if (isAnyErrorResponse(result)) return [];
+    const result = await fetchApi(getUsersAvatarHeadshot, {
+      userIds,
+      size,
+      format: "Png",
+    }) as unknown as RobloxThumbnailResponse;
+
     return result.data ?? [];
   } catch (error) {
     console.error("Error getting player thumbnails:", error);
@@ -118,8 +145,11 @@ export async function getRobloxBlurb(userId: number): Promise<string | null> {
 
 export async function getGroupLogo(groupId: number): Promise<string> {
   try {
-    const result = await fetchApi(getGroupsIcons, { groupIds: [groupId], size: "150x150", format: "Png" });
-    if (isAnyErrorResponse(result)) return "";
+    const result = await fetchApi(getGroupsIcons, {
+      groupIds: [groupId],
+      size: "150x150",
+      format: "Png",
+    }) as unknown as RobloxThumbnailResponse;
     return result.data?.[0]?.imageUrl ?? "";
   } catch (error) {
     console.error(`Error getting logo for group ${groupId}:`, error);
