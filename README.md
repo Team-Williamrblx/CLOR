@@ -9,7 +9,7 @@
 	  <img height="40px" src="public/wlogo.png?raw=true#gh-dark-mode-only"></img>
     <h1>Firefli by Cloudysatrn & Max Croft</h1>
   </div>
-    <img src="https://img.shields.io/badge/version-v1.1.11-purple"></img>
+    <img src="https://img.shields.io/badge/version-v1.1.14-purple"></img>
   <ul>
     <li><a href="#about">About</a></li>
     <li><a href="#why-consider">Why consider</a></li>
@@ -44,6 +44,9 @@
         </li>
         <li>
           Rank with Firefli Intergrations
+        </li>
+        <li>
+          Manage in-game bans and punishments
         </li>
         <li>
           Warn, promote, demote, and way more to your members
