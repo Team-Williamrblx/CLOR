@@ -81,6 +81,25 @@ const FIXED_HEIGHT: Record<string, number> = {
   birthdays: 2,
 };
 
+const EMPTY = new Set(["birthdays", "new_members"]);
+
+function compactLayout(items: WidgetLayout[]): WidgetLayout[] {
+  const sorted = [...items].sort((a, b) =>
+    a.y !== b.y ? a.y - b.y : a.x - b.x,
+  );
+  const colHeights = new Array(12).fill(0);
+  return sorted.map((item) => {
+    let y = 0;
+    for (let c = item.x; c < item.x + item.w && c < 12; c++) {
+      y = Math.max(y, colHeights[c]);
+    }
+    for (let c = item.x; c < item.x + item.w && c < 12; c++) {
+      colHeights[c] = y + item.h;
+    }
+    return { ...item, y };
+  });
+}
+
 const DEFAULT_WIDGETS = ["birthdays", "new_members", "sessions", "sticky_notes"];
 const DEFAULT_LAYOUT: WidgetLayout[] = [
   { i: "birthdays",    x: 0, y: 0, w: 12, h: 2, minW: 4, minH: 2, maxH: 2 },
@@ -106,6 +125,8 @@ const Home: pageWithLayout = () => {
   const [, setDashboardEditing] = useRecoilState(dashboardEditingState);
   const [editWidgets, setEditWidgets] = useState<string[]>([]);
   const [editLayout, setEditLayout] = useState<WidgetLayout[]>([]);
+  const [editHideEmpty, setEditHideEmpty] = useState<string[]>([]);
+  const [emptyWidgets, setEmptyWidgets] = useState<Record<string, boolean>>({});
   const [isSaving, setIsSaving] = useState(false);
   const [droppingWidgetId, setDroppingWidgetId] = useState<string | null>(null);
   const [dwellTargetId, setDwellTargetId] = useState<string | null>(null);
@@ -291,9 +312,14 @@ const Home: pageWithLayout = () => {
     const savedWidgets = workspace.settings?.widgets ?? [];
     setEditWidgets(savedWidgets.length > 0 ? [...savedWidgets] : [...DEFAULT_WIDGETS]);
     setEditLayout([...layout]);
+    setEditHideEmpty(
+      Array.isArray(workspace.settings?.hideEmpty)
+        ? [...workspace.settings.hideEmpty]
+        : [],
+    );
     setIsEditing(true);
     setDashboardEditing(true);
-  }, [workspace.settings?.widgets, layout]);
+  }, [workspace.settings?.widgets, workspace.settings?.hideEmpty, layout]);
 
   const cancelEdit = useCallback(() => {
     setIsEditing(false);
@@ -306,7 +332,7 @@ const Home: pageWithLayout = () => {
     try {
       const res = await axios.patch(
         `/api/workspace/${workspace.groupId}/settings/general/home`,
-        { widgets: editWidgets, layout: editLayout },
+        { widgets: editWidgets, layout: editLayout, hideEmpty: editHideEmpty },
       );
       if (res.status === 200) {
         setWorkspace((prev: typeof workspace) => ({
@@ -315,6 +341,7 @@ const Home: pageWithLayout = () => {
             ...prev.settings,
             widgets: editWidgets,
             layout: editLayout,
+            hideEmpty: editHideEmpty,
           },
         }));
         setIsEditing(false);
@@ -325,11 +352,26 @@ const Home: pageWithLayout = () => {
     } finally {
       setIsSaving(false);
     }
-  }, [workspace.groupId, editWidgets, editLayout, setWorkspace]);
+  }, [workspace.groupId, editWidgets, editLayout, editHideEmpty, setWorkspace]);
 
   const removeEditWidget = useCallback((widgetId: string) => {
     setEditWidgets((prev) => prev.filter((w) => w !== widgetId));
     setEditLayout((prev) => prev.filter((l) => l.i !== widgetId));
+    setEditHideEmpty((prev) => prev.filter((w) => w !== widgetId));
+  }, []);
+
+  const toggleHideIfEmpty = useCallback((widgetId: string) => {
+    setEditHideEmpty((prev) =>
+      prev.includes(widgetId)
+        ? prev.filter((w) => w !== widgetId)
+        : [...prev, widgetId],
+    );
+  }, []);
+
+  const handleWidgetEmpty = useCallback((widgetId: string, empty: boolean) => {
+    setEmptyWidgets((prev) =>
+      prev[widgetId] === empty ? prev : { ...prev, [widgetId]: empty },
+    );
   }, []);
   const preDragLayoutRef = useRef<WidgetLayout[]>([]);
   const dwellRef = useRef<{
@@ -514,6 +556,27 @@ const Home: pageWithLayout = () => {
   const availableWidgets = Object.keys(widgets).filter(
     (id) => !editWidgets.includes(id),
   );
+
+  const hiddenWidgets = useMemo(() => {
+    const hideList = Array.isArray(workspace.settings?.hideEmpty)
+      ? workspace.settings.hideEmpty
+      : [];
+    return new Set(
+      layout
+        .filter(
+          (item) =>
+            EMPTY.has(item.i) &&
+            hideList.includes(item.i) &&
+            emptyWidgets[item.i] === true,
+        )
+        .map((item) => item.i),
+    );
+  }, [layout, workspace.settings?.hideEmpty, emptyWidgets]);
+
+  const displayPositions = useMemo(() => {
+    const visible = layout.filter((item) => !hiddenWidgets.has(item.i));
+    return new Map(compactLayout(visible).map((l) => [l.i, l]));
+  }, [layout, hiddenWidgets]);
 
   return (
     <div className="min-h-screen bg-zinc-50 dark:bg-zinc-900">
@@ -740,7 +803,7 @@ const Home: pageWithLayout = () => {
                               <IconX className="w-3 h-3" />
                             </button>
                           </div>
-                          <div className="flex-1 flex items-center justify-center p-3 min-h-0">
+                          <div className="flex-1 flex flex-col items-center justify-center p-3 min-h-0">
                             <div className="text-center">
                               <IconLayoutGrid className="w-7 h-7 mx-auto mb-1.5 text-zinc-300 dark:text-zinc-600" />
                               <p className="text-xs text-zinc-400 dark:text-zinc-500 line-clamp-2">
@@ -750,6 +813,41 @@ const Home: pageWithLayout = () => {
                                 Drag corners to resize
                               </p>
                             </div>
+                            {EMPTY.has(widgetId) && (
+                              <button
+                                type="button"
+                                onMouseDown={(e) => e.stopPropagation()}
+                                onClick={() => toggleHideIfEmpty(widgetId)}
+                                title="Only show this widget when it has content to display"
+                                className="mt-2 flex items-center gap-1.5 select-none"
+                              >
+                                <span
+                                  className={clsx(
+                                    "relative inline-flex h-3.5 w-6 flex-shrink-0 rounded-full transition-colors",
+                                    editHideEmpty.includes(widgetId)
+                                      ? "bg-primary"
+                                      : "bg-zinc-300 dark:bg-zinc-600",
+                                  )}
+                                >
+                                  <span
+                                    className={clsx(
+                                      "absolute top-0.5 h-2.5 w-2.5 rounded-full bg-white shadow transition-all",
+                                      editHideEmpty.includes(widgetId)
+                                        ? "left-[13px]"
+                                        : "left-0.5",
+                                    )}
+                                  />
+                                </span>
+                                <span className={clsx(
+                                  "text-[10px] font-medium",
+                                  editHideEmpty.includes(widgetId)
+                                    ? "text-primary"
+                                    : "text-zinc-400 dark:text-zinc-500",
+                                )}>
+                                  Hide when empty
+                                </span>
+                              </button>
+                            )}
                           </div>
                         </div>
                       );
@@ -862,22 +960,35 @@ const Home: pageWithLayout = () => {
                   .map((item: WidgetLayout) => {
                     const widgetConfig = widgets[item.i];
                     if (!widgetConfig) return null;
-                    const Widget = widgetConfig.component;
+                    const Widget = widgetConfig.component as React.FC<{
+                      onEmptyChange?: (empty: boolean) => void;
+                    }>;
                     const Icon = widgetConfig.icon;
                     const isMobile =
                       windowWidth !== undefined && windowWidth < 768;
+                    const widgetProps = EMPTY.has(item.i)
+                      ? {
+                          onEmptyChange: (empty: boolean) =>
+                            handleWidgetEmpty(item.i, empty),
+                        }
+                      : {};
+
+                    const isHidden = hiddenWidgets.has(item.i);
+                    const pos = displayPositions.get(item.i) ?? item;
 
                     return (
                       <div
                         key={item.i}
                         style={
-                          isMobile
-                            ? { minHeight: item.h * 80 }
+                          isHidden
+                            ? { display: "none" }
+                            : isMobile
+                            ? { minHeight: pos.h * 80 }
                             : {
-                                gridColumnStart: item.x + 1,
-                                gridColumnEnd: item.x + item.w + 1,
-                                gridRowStart: item.y + 1,
-                                gridRowEnd: item.y + item.h + 1,
+                                gridColumnStart: pos.x + 1,
+                                gridColumnEnd: pos.x + pos.w + 1,
+                                gridRowStart: pos.y + 1,
+                                gridRowEnd: pos.y + pos.h + 1,
                               }
                         }
                         className={clsx(
@@ -905,7 +1016,7 @@ const Home: pageWithLayout = () => {
                               : "overflow-hidden",
                           )}
                         >
-                          <Widget />
+                          <Widget {...widgetProps} />
                         </div>
                       </div>
                     );

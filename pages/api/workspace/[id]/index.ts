@@ -27,6 +27,7 @@ type Data = {
 			moderationEnabled: boolean
 			applicationsEnabled: boolean
 			widgets: string[]
+			hideEmpty: string[]
 			layout?: Array<{
 				i: string
 				x: number
@@ -184,7 +185,8 @@ export async function handler(
 			moderationEnabled: (await getConfig('moderation', workspace.groupId))?.enabled || false,
 			applicationsEnabled: (await getConfig('applications', workspace.groupId))?.enabled || false,
 			widgets: (await getConfig('home', workspace.groupId))?.widgets || [],
-			layout: (await getConfig('home', workspace.groupId))?.layout || undefined
+			layout: (await getConfig('home', workspace.groupId))?.layout || undefined,
+			hideEmpty: (await getConfig('home', workspace.groupId))?.hideIfEmpty || []
 		}
 	} })
 }

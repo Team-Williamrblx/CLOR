@@ -56,6 +56,7 @@ const workspacestate = atom({
 			applicationsEnabled: false,
 			widgets: [] as string[],
 			bannerImage: null as string | null,
+			hideEmpty: [] as string[],
 			layout: undefined as Array<{
 				i: string;
 				x: number;

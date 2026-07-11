@@ -53,11 +53,12 @@ function getRandomBg(userid: string, username?: string) {
   return BG_COLORS[index];
 }
 
-export default function NewToTeam() {
+export default function NewToTeam({ onEmptyChange }: { onEmptyChange?: (empty: boolean) => void } = {}) {
   const router = useRouter();
   const { id: workspaceId } = router.query;
   const [members, setMembers] = useState<NewMember[]>([]);
   const [loading, setLoading] = useState(false);
+  const [loaded, setLoaded] = useState(false);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [showEditor, setShowEditor] = useState(false);
   const [playingId, setPlayingId] = useState<string | null>(null);
@@ -97,7 +98,10 @@ export default function NewToTeam() {
           setMembers(membersList);
         }
       })
-      .finally(() => setLoading(false));
+      .finally(() => {
+        setLoading(false);
+        setLoaded(true);
+      });
   }, [workspaceId, currentUserId]);
 
   const refreshMembers = () => {
@@ -218,6 +222,12 @@ export default function NewToTeam() {
       }
     };
   }, []);
+
+  const isEmpty = members.length === 0;
+
+  useEffect(() => {
+    onEmptyChange?.(loaded ? isEmpty : false);
+  }, [loaded, isEmpty, onEmptyChange]);
 
   if (loading) return null;
 

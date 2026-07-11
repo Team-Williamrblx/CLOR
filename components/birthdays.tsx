@@ -60,8 +60,9 @@ const monthNames = [
   "July", "August", "September", "October", "November", "December"
 ];
 
-export default function Birthdays() {
+export default function Birthdays({ onEmptyChange }: { onEmptyChange?: (empty: boolean) => void } = {}) {
   const [birthdays, setBirthdays] = useState<BirthdayUser[]>([]);
+  const [loaded, setLoaded] = useState(false);
   const [showConfetti, setShowConfetti] = useState(false);
   const router = useRouter();
   const { id: workspaceId } = router.query;
@@ -71,10 +72,11 @@ export default function Birthdays() {
   useEffect(() => {
     if (!workspaceId) return;
     axios.get(`/api/workspace/${workspaceId}/home/upcoming?days=7`).then(res => {
-      if (res.status === 200) {
-        setBirthdays(res.data.birthdays);
-      }
-    });
+        if (res.status === 200) {
+          setBirthdays(res.data.birthdays);
+        }
+      })
+      .finally(() => setLoaded(true));
   }, [workspaceId]);
 
   useEffect(() => {
@@ -97,6 +99,12 @@ export default function Birthdays() {
       daysAway: getDaysUntilBirthday(user.birthdayDay, user.birthdayMonth),
     }))
     .filter(user => user.daysAway >= 0 && user.daysAway <= 7);
+
+  const isEmpty = usersWithDays.length === 0;
+
+  useEffect(() => {
+    onEmptyChange?.(loaded ? isEmpty : false);
+  }, [loaded, isEmpty, onEmptyChange]);
 
   if (usersWithDays.length === 0) {
     return (

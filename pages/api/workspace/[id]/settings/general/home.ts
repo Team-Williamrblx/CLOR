@@ -36,10 +36,16 @@ export async function handler(
 		const workspaceId = parseInt(req.query.id as string);
 		const before = await getConfig('home', workspaceId);
 		const allowedWidgets = new Set(['sessions', 'wall', 'documents', 'notices', 'birthdays', 'new_members', 'sticky_notes', 'quota', 'games']);
+		const hideableWidgets = new Set(['birthdays', 'new_members']);
 		const requestedWidgets = Array.isArray(req.body?.widgets) ? req.body.widgets : [];
 		const sanitizedWidgets = requestedWidgets.filter((w: unknown): w is string => typeof w === 'string' && allowedWidgets.has(w));
-		const after: { widgets: string[]; layout?: WidgetLayout[]; bannerImage?: string | null } = { 
+		const requestedHideEmpty = Array.isArray(req.body?.hideIfEmpty) ? req.body.hideIfEmpty : [];
+		const sanitisedHideEmpty = requestedHideEmpty.filter(
+			(w: unknown): w is string => typeof w === 'string' && hideableWidgets.has(w) && sanitizedWidgets.includes(w),
+		);
+		const after: { widgets: string[]; layout?: WidgetLayout[]; hideEmpty: string[]; bannerImage?: string | null } = { 
 			widgets: sanitizedWidgets,
+			hideEmpty: sanitisedHideEmpty,
 			...(before?.bannerImage != null ? { bannerImage: before.bannerImage } : {}),
 		};
 		

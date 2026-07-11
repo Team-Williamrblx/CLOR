@@ -27,6 +27,7 @@ type Data = {
 			applicationsEnabled: boolean
 			widgets: string[]
 			layout: any[]
+			hideEmpty: string[]
 			bannerImage: string | null
 		}
 	}
@@ -212,6 +213,7 @@ export async function handler(
 			recommendationsEnabled: recommendationsConfig?.enabled || false,
 			moderationEnabled: moderationConfig?.enabled || false,				applicationsEnabled: applicationsConfig?.enabled || false,			widgets: homeConfig?.widgets || [],
 			layout: homeConfig?.layout || [],
+			hideEmpty: homeConfig?.hideIfEmpty || [],
 			bannerImage: null as string | null,
 		}
 	} })
