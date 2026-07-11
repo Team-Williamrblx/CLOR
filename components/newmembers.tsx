@@ -245,8 +245,8 @@ export default function NewToTeam({ onEmptyChange }: { onEmptyChange?: (empty: b
 
   return (
     <>
-      <div className="h-full w-full overflow-x-auto overflow-y-hidden touch-pan-x -mx-3 px-3">
-        <div className="flex flex-nowrap gap-6 sm:gap-6 w-max h-full items-start pb-2">
+      <div className="w-full overflow-x-auto touch-pan-x -mx-3 px-3">
+        <div className="flex flex-nowrap gap-6 sm:gap-6 w-max items-start pb-2">
           {members.map((m) => {
             const isCurrentUser = currentUserId && m.userid === currentUserId;
             const isPlaying = playingId === m.userid;
